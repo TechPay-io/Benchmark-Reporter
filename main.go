@@ -7,9 +7,38 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
+var wg sync.WaitGroup
+
+// const time = time.ParseDuration("1s").Milliseconds()
+
 func main() {
+	var delay = time.Duration(1000) * time.Millisecond
+
+	// loop the function until terminated
+	// for {
+	// 	// update the price
+	// 	log_analysis()
+	// 	// wait for termination or delay
+	// 	// select {
+	// 	// case <-pro.sigClose:
+	// 	// 	// stop signal received
+	// 	// 	return
+	// 	// case <-time.After(delay):
+	// 	// 	// we repeat the function
+	// 	// }
+	// }
+	for {
+		wg.Add(1)
+		go log_analysis()
+		wg.Wait()
+		time.After(delay)
+	}
+}
+func log_analysis() {
 	if _, err := os.Stat("./photon.log"); err != nil {
 		log.Printf("File doesn't exist %v", err)
 	}
@@ -62,4 +91,5 @@ func main() {
 
 		fmt.Printf("Maximum transaction is %v at %v", j, i)
 	}
+	wg.Done()
 }
