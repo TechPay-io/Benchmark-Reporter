@@ -10,34 +10,24 @@ import (
 	"strings"
 )
 
-//var wg sync.WaitGroup
-
-// const time = time.ParseDuration("1s").Milliseconds()
-
 func main() {
-	//	var delay = time.Duration(1000) * time.Millisecond
 
-	// loop the function until terminated
-	// for {
-	// 	// update the price
-	// 	log_analysis()
-	// 	// wait for termination or delay
-	// 	// select {
-	// 	// case <-pro.sigClose:
-	// 	// 	// stop signal received
-	// 	// 	return
-	// 	// case <-time.After(delay):
-	// 	// 	// we repeat the function
-	// 	// }
-	// }
-	//for {
-	//wg.Add(1)
 	log_analysis()
-	//wg.Wait()
-	//	time.After(delay)
-	//}
+
 }
 func log_analysis() {
+	var first string
+
+	// Taking input from user
+	fmt.Println("Enter Index From:")
+
+	fmt.Scanln(&first)
+	fmt.Println("Enter Index To: ")
+	var second string
+	fmt.Scanln(&second)
+	first_inx, _ := strconv.Atoi(first)
+	second_inx, _ := strconv.Atoi(second)
+
 	if _, err := os.Stat("./photon.log"); err != nil {
 		log.Printf("File doesn't exist %v", err)
 	}
@@ -54,11 +44,11 @@ func log_analysis() {
 	}()
 
 	s := bufio.NewScanner(f)
-	i := 0
 	// count := 0
 	var freq = make(map[string]int)
 	// var txns []string
-
+	var avg_indexfreq = make(map[string]int)
+	inx := 0
 	for s.Scan() {
 
 		matched, err := regexp.Match("block", []byte(s.Text()))
@@ -66,14 +56,8 @@ func log_analysis() {
 			fmt.Print("\n found", err)
 
 		}
-
-		//fmt.Println(matched)
-
 		if matched == true {
-
-			//txns := strings.Split(a[len(a)-3], "=")
 			a := strings.Split(s.Text(), " ")
-
 			for _, j := range a {
 
 				if strings.HasPrefix(j, "txs=") {
@@ -84,12 +68,32 @@ func log_analysis() {
 						freq[a[2]] = total_txns
 
 					}
-					//	fmt.Println(total_txns, a[2])
 				}
 
+				if strings.HasPrefix(j, "index=") {
+
+					inx, _ = strconv.Atoi(strings.Split(j, "=")[1])
+				}
+
+				if first_inx <= inx && inx <= second_inx {
+
+					fmt.Println("enter1")
+					if strings.HasPrefix(j, "txs=") {
+
+						total_txns, _ := strconv.Atoi(strings.Split(j, "=")[1])
+						if _, ok := avg_indexfreq[a[2]]; ok {
+
+							avg_indexfreq[a[2]] = avg_indexfreq[a[2]] + total_txns
+						} else {
+
+							avg_indexfreq[a[2]] = total_txns
+						}
+
+					}
+				}
 			}
+
 		}
-		i++
 	}
 	max := 0
 	var max_txn = make(map[string]int)
@@ -109,5 +113,14 @@ func log_analysis() {
 
 		fmt.Printf("Maximum transaction is %v at %v\n", j, i)
 	}
-	//wg.Done()
+
+	sum := 0
+	avg := 0
+	for _, j := range avg_indexfreq {
+
+		sum = sum + j
+
+	}
+	avg = sum / len(avg_indexfreq)
+	fmt.Println("Average of transaction per second from  index %v to %v is %v", first_inx, second_inx, avg)
 }
