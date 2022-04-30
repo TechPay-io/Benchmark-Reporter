@@ -25,8 +25,15 @@ func log_analysis() {
 	fmt.Println("Enter Index To: ")
 	var second string
 	fmt.Scanln(&second)
+	if first == "" {
+		first = "0"
+	}
+	if second == "" {
+		second = "0"
+	}
 	first_inx, _ := strconv.Atoi(first)
 	second_inx, _ := strconv.Atoi(second)
+	fmt.Println("value", first, second)
 
 	if _, err := os.Stat("./photon.log"); err != nil {
 		log.Printf("File doesn't exist %v", err)
@@ -74,23 +81,24 @@ func log_analysis() {
 
 					inx, _ = strconv.Atoi(strings.Split(j, "=")[1])
 				}
+				if first_inx != 0 || second_inx != 0 {
+					if first_inx <= inx && inx <= second_inx {
 
-				if first_inx <= inx && inx <= second_inx {
+						if strings.HasPrefix(j, "txs=") {
 
-					fmt.Println("enter1")
-					if strings.HasPrefix(j, "txs=") {
+							total_txns, _ := strconv.Atoi(strings.Split(j, "=")[1])
 
-						total_txns, _ := strconv.Atoi(strings.Split(j, "=")[1])
-						if _, ok := avg_indexfreq[a[2]]; ok {
+							if _, ok := avg_indexfreq[a[2]]; ok {
+								avg_indexfreq[a[2]] = avg_indexfreq[a[2]] + total_txns
+							} else {
 
-							avg_indexfreq[a[2]] = avg_indexfreq[a[2]] + total_txns
-						} else {
+								avg_indexfreq[a[2]] = total_txns
+							}
 
-							avg_indexfreq[a[2]] = total_txns
 						}
-
 					}
 				}
+
 			}
 
 		}
@@ -116,11 +124,24 @@ func log_analysis() {
 
 	sum := 0
 	avg := 0
-	for _, j := range avg_indexfreq {
 
-		sum = sum + j
+	if len(avg_indexfreq) != 0 {
+		for _, j := range avg_indexfreq {
+
+			sum = sum + j
+
+		}
+		avg = sum / len(avg_indexfreq)
+		fmt.Printf("Average of transaction per second from  index %v to %v is %v\n", first_inx, second_inx, avg)
+
+	} else {
+		for _, j := range freq {
+
+			sum = sum + j
+
+		}
+		avg = sum / len(freq)
+		fmt.Printf("Average of transaction per second %v\n", avg)
 
 	}
-	avg = sum / len(avg_indexfreq)
-	fmt.Println("Average of transaction per second from  index %v to %v is %v", first_inx, second_inx, avg)
 }
