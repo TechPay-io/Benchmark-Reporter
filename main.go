@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -16,24 +17,16 @@ func main() {
 
 }
 func log_analysis() {
-	var first string
+	//	var output string
+	first := flag.Int("from", 0, "from index")
+	second := flag.Int("to", 0, "from index")
+	flag.Parse()
+	// fmt.Println("Flag -o : ", *first)
+	// fmt.Println("Positional Args : ", *second)
 
-	// Taking input from user
-	fmt.Println("Enter Index From:")
-
-	fmt.Scanln(&first)
-	fmt.Println("Enter Index To: ")
-	var second string
-	fmt.Scanln(&second)
-	if first == "" {
-		first = "0"
-	}
-	if second == "" {
-		second = "0"
-	}
-	first_inx, _ := strconv.Atoi(first)
-	second_inx, _ := strconv.Atoi(second)
-	fmt.Println("value", first, second)
+	first_inx := *first
+	second_inx := *second
+	// fmt.Println("value", first, second)
 
 	if _, err := os.Stat("./photon.log"); err != nil {
 		log.Printf("File doesn't exist %v", err)
@@ -81,7 +74,7 @@ func log_analysis() {
 
 					inx, _ = strconv.Atoi(strings.Split(j, "=")[1])
 				}
-				if first_inx != 0 || second_inx != 0 {
+				if first_inx > 0 && second_inx > 0 && first_inx <= second_inx {
 					if first_inx <= inx && inx <= second_inx {
 
 						if strings.HasPrefix(j, "txs=") {
@@ -100,7 +93,6 @@ func log_analysis() {
 				}
 
 			}
-
 		}
 	}
 	max := 0
@@ -116,31 +108,24 @@ func log_analysis() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	for i, j := range max_txn {
-
 		fmt.Printf("Maximum transaction is %v at %v\n", j, i)
 	}
-
 	sum := 0
 	avg := 0
 
 	if len(avg_indexfreq) != 0 {
 		for _, j := range avg_indexfreq {
-
 			sum = sum + j
-
 		}
 		avg = sum / len(avg_indexfreq)
 		fmt.Printf("Average of transaction per second from  index %v to %v is %v\n", first_inx, second_inx, avg)
-
 	} else {
 		for _, j := range freq {
-
 			sum = sum + j
-
 		}
 		avg = sum / len(freq)
+		fmt.Printf("No Specific Indexs is found\n")
 		fmt.Printf("Average of transaction per second %v\n", avg)
 
 	}
