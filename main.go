@@ -27,7 +27,12 @@ func log_analysis() {
 	first_inx := *first
 	second_inx := *second
 	// fmt.Println("value", first, second)
-
+	if first_inx < 0 {
+		first_inx = 0
+	}
+	if second_inx < 0 {
+		second_inx = 0
+	}
 	if _, err := os.Stat("./photon.log"); err != nil {
 		log.Printf("File doesn't exist %v", err)
 	}
@@ -74,7 +79,8 @@ func log_analysis() {
 
 					inx, _ = strconv.Atoi(strings.Split(j, "=")[1])
 				}
-				if first_inx > 0 && second_inx > 0 && first_inx <= second_inx {
+				if first_inx > 0 && second_inx > 0 && first_inx < second_inx {
+
 					if first_inx <= inx && inx <= second_inx {
 
 						if strings.HasPrefix(j, "txs=") {
@@ -89,6 +95,33 @@ func log_analysis() {
 							}
 
 						}
+					}
+				} else if second_inx == 0 && first_inx != 0 && first_inx <= inx {
+					if strings.HasPrefix(j, "txs=") {
+
+						total_txns, _ := strconv.Atoi(strings.Split(j, "=")[1])
+
+						if _, ok := avg_indexfreq[a[2]]; ok {
+							avg_indexfreq[a[2]] = avg_indexfreq[a[2]] + total_txns
+						} else {
+
+							avg_indexfreq[a[2]] = total_txns
+						}
+
+					}
+				} else if first_inx == 0 && second_inx != 0 && second_inx >= inx {
+
+					if strings.HasPrefix(j, "txs=") {
+
+						total_txns, _ := strconv.Atoi(strings.Split(j, "=")[1])
+
+						if _, ok := avg_indexfreq[a[2]]; ok {
+							avg_indexfreq[a[2]] = avg_indexfreq[a[2]] + total_txns
+						} else {
+
+							avg_indexfreq[a[2]] = total_txns
+						}
+
 					}
 				}
 
@@ -113,19 +146,26 @@ func log_analysis() {
 	}
 	sum := 0
 	avg := 0
+	var indexes string
 
 	if len(avg_indexfreq) != 0 {
 		for _, j := range avg_indexfreq {
 			sum = sum + j
 		}
 		avg = sum / len(avg_indexfreq)
-		fmt.Printf("Average of transaction per second from  index %v to %v is %v\n", first_inx, second_inx, avg)
+		if second_inx == 0 {
+			indexes = "last"
+		} else {
+			indexes = fmt.Sprintf("%v", second_inx)
+
+		}
+		fmt.Printf("Average of transaction per second from  index %v to %v is %v\n", first_inx, indexes, avg)
 	} else {
 		for _, j := range freq {
 			sum = sum + j
 		}
 		avg = sum / len(freq)
-		fmt.Printf("No Specific Indexs is found\n")
+		fmt.Printf("No Specific Indexes are found\n")
 		fmt.Printf("Average of transaction per second %v\n", avg)
 
 	}
